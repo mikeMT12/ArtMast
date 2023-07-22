@@ -40,37 +40,43 @@ public class PlayerCombat : MonoBehaviour
         {
             if (weapon.attackState == false)
             {
-                weapon.DrawWeapon();
+                
+/*                var animator = weapon.player.GetComponent<Animator>();
+                animator.SetBool("DrawGitar", true);*/
                 PlaySound();    
 
-                weapon.transform.position = new Vector3(2.4f, 1.19400001f, -0.953000009f);
+                weapon.transform.position = new Vector3(2.062f, 1.133f, -1.201f);
                 weapon.transform.rotation = new Quaternion(0.102721341f, 0.146560788f, 0.82362324f, 0.538157105f);
                 weapon.transform.parent = ParentForWeapon.transform;
                 Debug.Log("1");
                 weapon.attackState = true;
 
+
             }
-                
-            for (int i = nowTimeItem + 1; i < timeings.Length; i++)
+            if(weapon.attackState == true)
             {
-                if (timeings[i] - 0.5f <= pastTime && pastTime <= timeings[i] + 0.5f)
+                for (int i = nowTimeItem + 1; i < timeings.Length; i++)
                 {
-                    CancelInvoke("EndCombo");
-                    animator.runtimeAnimatorController = combo[comboCounter].animatorOV;
-                    animator.Play("Attack", 0, 0);
-                    weapon.damage = combo[comboCounter].damage;
-                    comboCounter++;
-                    lastClickedTime = Time.time;
-
-                    if (comboCounter + 1 > combo.Count)
+                    if (timeings[i] - 0.5f <= pastTime && pastTime <= timeings[i] + 0.5f)
                     {
-                        comboCounter = 0;
-                    }
-                    nowTimeItem = i;
-                    break;
-                }
+                        CancelInvoke("EndCombo");
+                        animator.runtimeAnimatorController = combo[comboCounter].animatorOV;
+                        animator.Play("Attack", 0, 0);
+                        weapon.damage = combo[comboCounter].damage;
+                        comboCounter++;
+                        lastClickedTime = Time.time;
 
+                        if (comboCounter + 1 > combo.Count)
+                        {
+                            comboCounter = 0;
+                        }
+                        nowTimeItem = i;
+                        break;
+                    }
+
+                }
             }
+            
         }
         ExitAttack();
 
