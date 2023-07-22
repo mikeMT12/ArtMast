@@ -9,11 +9,15 @@ public class Weapon : MonoBehaviour
     public int comboLength;
 
     BoxCollider triggerBox;
+    public bool attackState = false;
+    public GameObject player;
+    
 
 
     private void Start()
     {
         triggerBox = GetComponent<BoxCollider>();
+        
     }
 
     private void OnTriggerEnter(Collider other)
@@ -37,5 +41,21 @@ public class Weapon : MonoBehaviour
     public void DisableTriggerBox()
     {
         triggerBox.enabled = false;
+    }
+
+    public void DrawWeapon()
+    {
+        attackState = true;
+        var animator = player.GetComponent<Animator>();
+        animator.SetBool("DrawGitar", true);
+
+    }
+
+    public void SheathWeapon()
+    {
+        attackState = false;
+        var animator = player.GetComponent<Animator>();
+        animator.SetBool("DrawGitar", false);
+
     }
 }
