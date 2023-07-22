@@ -26,7 +26,8 @@ public class PlayerCombat : MonoBehaviour
     public Quaternion WeaponInHandR;
     //Vector3(2.43099999,1.19400001,-0.953000009)
     //Quaternion(0.102721341,0.146560788,0.82362324,0.538157105)
-
+    //Vector3(-2.69199991,-0.563000023,-0.204999998)
+    //Quaternion(-0.395024359,-0.56962961,-0.445218742,0.566796422)
     void Start()
     {
         animator = GetComponent<Animator>();
@@ -36,6 +37,7 @@ public class PlayerCombat : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         if (Input.GetButtonDown("Fire1"))
         {
             if (weapon.attackState == false)
@@ -43,12 +45,11 @@ public class PlayerCombat : MonoBehaviour
                 
 /*                var animator = weapon.player.GetComponent<Animator>();
                 animator.SetBool("DrawGitar", true);*/
-                PlaySound();    
+                PlaySound();
 
-                weapon.transform.position = new Vector3(2.062f, 1.133f, -1.201f);
-                weapon.transform.rotation = new Quaternion(0.102721341f, 0.146560788f, 0.82362324f, 0.538157105f);
-                weapon.transform.parent = ParentForWeapon.transform;
-                Debug.Log("1");
+                WeaponTranslate();
+                
+              
                 weapon.attackState = true;
 
 
@@ -146,6 +147,13 @@ public class PlayerCombat : MonoBehaviour
             pastTime += 0.1f;
             yield return new WaitForSeconds(0.1f);
         }
+    }
+
+    void WeaponTranslate()
+    {
+        weapon.transform.position = new Vector3(1.74f, 1.67f, -1.37f);
+        weapon.transform.Rotate(-55.854f, -60.17f, -176.169f, Space.Self);
+        weapon.transform.parent = ParentForWeapon.transform;
     }
 }
 
