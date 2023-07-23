@@ -1,8 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using System.Collections;
-
-
+using UnityEngine.UI;
 public class NPCController : MonoBehaviour
 {
 
@@ -22,31 +21,31 @@ public class NPCController : MonoBehaviour
     public float DistanceToChangePoint;
     public float PersecutionDistance;
     public Animator NpcAnimator;
+    public float NpcHealth;
+    public Scrollbar HealthScrollbar;
     private int NowPositionNumber = 0;
     private bool IsWalk = true;
     [Space(2)]
     [Header("Для стрельбы")]
     [Space]
+    public float DamageStrong;
     [Tooltip("Радиус разброса пуль")]
     [Range(0, 3)]
     public float bulletSpreadRadius; // Разброс пуль
     [Tooltip("Точка спавна пули")]
     public Transform bulletSpawnPoint; // Точка спавна пуль
 
+
+    private float StartHealth;
     private NavMeshAgent navMeshAgent;
     private int time;
     private void Start()
     {
         navMeshAgent = GetComponent<NavMeshAgent>();
         navMeshAgent.stoppingDistance = shootingRange;
-       
+         StartHealth = NpcHealth;
     }
 
-    private void Update()
-    {
-        // Следование за игроком
-
-    }
     public void StartWalk()
     {
         StartCoroutine(WalkAround());
@@ -70,11 +69,9 @@ public class NPCController : MonoBehaviour
             if (hit.transform.GetComponent<PlayerController>() != null)
             {
                 // Вызываем функцию попадания
-                hit.transform.GetComponent<PlayerController>().Hit();
+                hit.transform.GetComponent<PlayerController>().Hit(DamageStrong);
             }
             if(NpcAnimator!=null) {  NpcAnimator.Play("attack");}
-           
-            
         }
     }
 
@@ -129,5 +126,18 @@ public class NPCController : MonoBehaviour
         }      
     }
 
+    public void OnHit(float damage)
+    {
+        NpcHealth -= damage;
+        HealthScrollbar.size =  NpcHealth / StartHealth;
+        if(NpcHealth <= 0)
+        {
+            StopAllCoroutines();
+            if(NpcAnimator != null) {NpcAnimator.Play("death"); }
+            
+            Destroy(gameObject, 1);
+        }
+        
+    }
 }
 
