@@ -9,9 +9,13 @@ public class PlayerController : MonoBehaviour
 
     public int AttacsNpc;
 
-
+    private void Awake()
+    {
+        if (instance == null) instance = this;
+        else Destroy(gameObject);
+    }
     public void Hit()
     {
-        
+        print("HIT");
     }
 }

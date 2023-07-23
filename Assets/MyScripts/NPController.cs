@@ -13,28 +13,23 @@ public class NPCController : MonoBehaviour
     [Space(2)]
     [Header("Для NPC")]
     [Space]
+    [Tooltip("Точки по которым ходит npc")]
+    public Transform[] PointPositions;
     [Tooltip("Дистанция, с которой NPC открывает огонь")]
     [Range(0, 10)]
     public float shootingRange = 10f; // Дистанция для стрельбы
-    [Tooltip("Дистанция обхода препятствий")]
-    public Transform[] PointPositions;
+    public float AttackTime;
     public float DistanceToChangePoint;
+    public float PersecutionDistance;
+    public Animator NpcAnimator;
     private int NowPositionNumber = 0;
-    private bool IsWalk;
+    private bool IsWalk = true;
     [Space(2)]
     [Header("Для стрельбы")]
     [Space]
-    [Tooltip("Время стрельбы, сколько ждать, в 0.2с")]
-    [Range(0, 1000)]
-    public float timeattack;
-    [Tooltip("Дальность стрельбы")]
-    [Range(0, 100)]
-    public float power;
     [Tooltip("Радиус разброса пуль")]
     [Range(0, 3)]
     public float bulletSpreadRadius; // Разброс пуль
-    [Tooltip("Префаб пули")]
-    public GameObject bulletPrefab; // Префаб пули
     [Tooltip("Точка спавна пули")]
     public Transform bulletSpawnPoint; // Точка спавна пуль
 
@@ -43,20 +38,22 @@ public class NPCController : MonoBehaviour
     private void Start()
     {
         navMeshAgent = GetComponent<NavMeshAgent>();
-        navMeshAgent.stoppingDistance = shootingRange; // Устанавливаем дистанцию остановки равной дистанции для стрельбы
+        navMeshAgent.stoppingDistance = shootingRange;
+       
     }
 
     private void Update()
     {
         // Следование за игроком
-       
-     
-        time++;
+
+    }
+    public void StartWalk()
+    {
+        StartCoroutine(WalkAround());
     }
 
-    IEnumerator Shoot()
+    void Shoot()
     {
-
         // Вычисляем направление стрельбы
         Vector3 shootingDirection = playerPosition.position - bulletSpawnPoint.position;
 
@@ -70,39 +67,39 @@ public class NPCController : MonoBehaviour
         if (Physics.Raycast(bulletSpawnPoint.position, shootingDirection, out hit))
         {
             // Проверяем попадание в игрока
-            if (hit.transform.CompareTag("Player"))
+            if (hit.transform.GetComponent<PlayerController>() != null)
             {
                 // Вызываем функцию попадания
                 hit.transform.GetComponent<PlayerController>().Hit();
             }
-            // Создаем пулю на месте спавна пуль и направляем ее по линии стрельбы
-            GameObject bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, Quaternion.LookRotation(shootingDirection));
-
-            // Наносим пуле начальную скорость или другие эффекты
-            bullet.GetComponent<Rigidbody>().AddForce(power * bullet.transform.forward);
-            // Уничтожаем пулю через некоторое время или при достижении максимального расстояния
-            Destroy(bullet, 2f);
+            if(NpcAnimator!=null) {  NpcAnimator.Play("attack");}
+           
+            
         }
-
-
-
-        yield return new WaitForSeconds(1);
-
     }
 
     IEnumerator Persecution()
     {
         while (!IsWalk)
-        { 
-            navMeshAgent.SetDestination(playerPosition.position);
+        {         
             float distanceToPlayer = Vector3.Distance(transform.position, playerPosition.position);
-            if (distanceToPlayer <= shootingRange && time > timeattack)
+            if (distanceToPlayer <= shootingRange)
                     {
-                        StartCoroutine(Shoot());
-                        time = 0;
+                        Shoot();   
                     }
-            else { StopCoroutine(Shoot()); }
-            yield return new WaitForSeconds(0.1f);
+            else 
+                {  
+                    navMeshAgent.SetDestination(playerPosition.position);
+                }
+
+            //если игрок сишком далеко то закончить преследование
+            if (distanceToPlayer >= PersecutionDistance * 4)
+            {
+                IsWalk = true;
+                PlayerController.instance.AttacsNpc--;
+                StartCoroutine(WalkAround());
+            }
+            yield return new WaitForSeconds(AttackTime);
         }
          
     }
@@ -112,19 +109,25 @@ public class NPCController : MonoBehaviour
         navMeshAgent.destination = PointPositions[NowPositionNumber].position;
         while (IsWalk)
         {
-            
-            if(navMeshAgent.remainingDistance < DistanceToChangePoint)
+            //walk to points
+            if(navMeshAgent.remainingDistance <= DistanceToChangePoint)
             {
                 NowPositionNumber++;
                 if(NowPositionNumber == PointPositions.Length) NowPositionNumber = 0;
-                navMeshAgent.destination = PointPositions[NowPositionNumber].position;
+                navMeshAgent.SetDestination(PointPositions[NowPositionNumber].position);
             }
-           
-            
+            //chek attack player
+            float distanceToPlayer = Vector3.Distance(transform.position, playerPosition.position);
+            if (distanceToPlayer <= PersecutionDistance && PlayerController.instance.AttacsNpc <= 1)// 1 можешь поменять на 2
+            {
+                IsWalk = false;
+                PlayerController.instance.AttacsNpc++;
+                StartCoroutine(Persecution());
+            }
+
             yield return new WaitForSeconds(0.1f);
         }      
     }
 
-   
 }
 
