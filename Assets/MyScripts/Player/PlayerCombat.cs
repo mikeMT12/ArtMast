@@ -13,7 +13,6 @@ public class PlayerCombat : MonoBehaviour
     [Range(0.1f, 2f)]
     public float timeBetweenCombos = 0.2f;
     Animator animator;
-    public Animation animation;
     [SerializeField] Weapon weapon;
     public float timeBetweenDraw = 0.6f;
 
@@ -27,12 +26,18 @@ public class PlayerCombat : MonoBehaviour
     public GameObject weapon0;
     [SerializeField] private PlayerInput playerInput;
 
+    public GameObject[] animTargets;
+    Transform position;
+
+
     void Start()
     {
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
         playerInput = GetComponent<PlayerInput>();
-        animation = GetComponent<Animation>();
+        position = GetComponent<Transform>();
+
+
     }
 
     // Update is called once per frame
@@ -41,8 +46,9 @@ public class PlayerCombat : MonoBehaviour
         
         if (Input.GetButtonDown("Fire1"))
         {
-            weapon0.gameObject.SetActive(false);
             weapon.gameObject.SetActive(true);
+            weapon0.gameObject.SetActive(false);
+
             if (weapon.attackState == false)
             {
 /*                var animator = weapon.player.GetComponent<Animator>();
@@ -52,53 +58,52 @@ public class PlayerCombat : MonoBehaviour
 
 
             }
-            if(weapon.attackState == true)
-            {
+
                
-                if (Time.time - lastClickedTime >= 0.9f)
-                {
+            if (Time.time - lastClickedTime >= 0.9f)
+            {
                     
-                    CancelInvoke("EndCombo");
-                    animator.runtimeAnimatorController = combo[comboCounter].animatorOV;
-                    playerInput.enabled = false;
-                    animator.Play("Attack", 0, 0);
-                    if(animator.IsPlaying("Sword high Spin"))
-                    lastClickedTime = Time.time;
-                    weapon.damage = combo[comboCounter].damage;
+                CancelInvoke("EndCombo");
+                animator.runtimeAnimatorController = combo[comboCounter].animatorOV;
+                playerInput.enabled = false;
+                animator.Play("Attack", 0, 0);
+
+
+                lastClickedTime = Time.time;
+                weapon.damage = combo[comboCounter].damage;
                     //if (Time.time - lastClickedTime >= 0.2f)
 
-                    for (int i = nowTimeItem + 1; i < timeings.Length; i++)
+                for (int i = nowTimeItem + 1; i < timeings.Length; i++)
+                {
+                    if (timeings[i] - 0.5f <= pastTime && pastTime <= timeings[i] + 0.5f)
                     {
-                        if (timeings[i] - 0.5f <= pastTime && pastTime <= timeings[i] + 0.5f)
+
+
+                        comboCounter++;
+
+                        if (comboCounter + 1 > combo.Count)
                         {
-
-
-                            comboCounter++;
-                            lastClickedTime = Time.time;
-
-                            if (comboCounter + 1 > combo.Count)
-                            {
-                                comboCounter = 0;
-                            }
-                            nowTimeItem = i;
-                            
-                            break;
+                            comboCounter = 0;
                         }
-                        
+                        nowTimeItem = i;
+                            
+                        break;
                     }
-                    
+                        
                 }
-
-
-
+                    
             }
 
-            
+
+
         }
         ExitAttack();
 
-        
     }
+    
+
+        
+
 
     public void Attack()
     {
@@ -128,10 +133,12 @@ public class PlayerCombat : MonoBehaviour
         
         if (animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.9f && animator.GetCurrentAnimatorStateInfo(0).IsTag("Attack"))
         {
-            playerInput.enabled = true;
+            Invoke("EndCombo", 1);
             weapon0.gameObject.SetActive(true);
             weapon.gameObject.SetActive(false);
-            Invoke("EndCombo", 1);
+            playerInput.enabled = true;
+
+            
         }
     }
 
