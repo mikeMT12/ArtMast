@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerCombat : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class PlayerCombat : MonoBehaviour
     [Range(0.1f, 2f)]
     public float timeBetweenCombos = 0.2f;
     Animator animator;
+    public Animation animation;
     [SerializeField] Weapon weapon;
     public float timeBetweenDraw = 0.6f;
 
@@ -22,65 +24,80 @@ public class PlayerCombat : MonoBehaviour
     private AudioSource audioSource;
     public float pastTime;
     public GameObject ParentForWeapon;
-    public Vector3 WeaponInHandP;
-    public Quaternion WeaponInHandR;
-    //Vector3(2.43099999,1.19400001,-0.953000009)
-    //Quaternion(0.102721341,0.146560788,0.82362324,0.538157105)
-    //Vector3(-2.69199991,-0.563000023,-0.204999998)
-    //Quaternion(-0.395024359,-0.56962961,-0.445218742,0.566796422)
+    public GameObject weapon0;
+    [SerializeField] private PlayerInput playerInput;
+
     void Start()
     {
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
+        playerInput = GetComponent<PlayerInput>();
+        animation = GetComponent<Animation>();
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        
         if (Input.GetButtonDown("Fire1"))
         {
+            weapon0.gameObject.SetActive(false);
+            weapon.gameObject.SetActive(true);
             if (weapon.attackState == false)
             {
-                
 /*                var animator = weapon.player.GetComponent<Animator>();
                 animator.SetBool("DrawGitar", true);*/
                 PlaySound();
-
-                WeaponTranslate();
-                
-              
                 weapon.attackState = true;
 
 
             }
             if(weapon.attackState == true)
             {
-                for (int i = nowTimeItem + 1; i < timeings.Length; i++)
+               
+                if (Time.time - lastClickedTime >= 0.9f)
                 {
-                    if (timeings[i] - 0.5f <= pastTime && pastTime <= timeings[i] + 0.5f)
+                    
+                    CancelInvoke("EndCombo");
+                    animator.runtimeAnimatorController = combo[comboCounter].animatorOV;
+                    playerInput.enabled = false;
+                    animator.Play("Attack", 0, 0);
+                    if(animator.IsPlaying("Sword high Spin"))
+                    lastClickedTime = Time.time;
+                    weapon.damage = combo[comboCounter].damage;
+                    //if (Time.time - lastClickedTime >= 0.2f)
+
+                    for (int i = nowTimeItem + 1; i < timeings.Length; i++)
                     {
-                        CancelInvoke("EndCombo");
-                        animator.runtimeAnimatorController = combo[comboCounter].animatorOV;
-                        animator.Play("Attack", 0, 0);
-                        weapon.damage = combo[comboCounter].damage;
-                        comboCounter++;
-                        lastClickedTime = Time.time;
-
-                        if (comboCounter + 1 > combo.Count)
+                        if (timeings[i] - 0.5f <= pastTime && pastTime <= timeings[i] + 0.5f)
                         {
-                            comboCounter = 0;
-                        }
-                        nowTimeItem = i;
-                        break;
-                    }
 
+
+                            comboCounter++;
+                            lastClickedTime = Time.time;
+
+                            if (comboCounter + 1 > combo.Count)
+                            {
+                                comboCounter = 0;
+                            }
+                            nowTimeItem = i;
+                            
+                            break;
+                        }
+                        
+                    }
+                    
                 }
+
+
+
             }
+
             
         }
         ExitAttack();
 
+        
     }
 
     public void Attack()
@@ -102,27 +119,18 @@ public class PlayerCombat : MonoBehaviour
                     comboCounter = 0;
                 }
             }
-        }
-                CancelInvoke("EndCombo");
-
-                animator.runtimeAnimatorController = combo[comboCounter].animatorOV;
-                animator.Play("Attack", 0, 0);
-                weapon.damage = combo[comboCounter].damage;
-                comboCounter++;
-                lastClickedTime = Time.time;
-
-                if (comboCounter + 1 > combo.Count)
-                {
-                    comboCounter = 0;
-                }*/
-
+        }*/
 
     }
 
     public void ExitAttack()
     {
+        
         if (animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.9f && animator.GetCurrentAnimatorStateInfo(0).IsTag("Attack"))
         {
+            playerInput.enabled = true;
+            weapon0.gameObject.SetActive(true);
+            weapon.gameObject.SetActive(false);
             Invoke("EndCombo", 1);
         }
     }
@@ -149,12 +157,7 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
-    void WeaponTranslate()
-    {
-        weapon.transform.position = new Vector3(1.74f, 1.67f, -1.37f);
-        weapon.transform.Rotate(-55.854f, -60.17f, -176.169f, Space.Self);
-        weapon.transform.parent = ParentForWeapon.transform;
-    }
+
 }
 
 
