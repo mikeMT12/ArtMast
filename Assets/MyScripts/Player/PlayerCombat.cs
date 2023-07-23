@@ -46,8 +46,7 @@ public class PlayerCombat : MonoBehaviour
         
         if (Input.GetButtonDown("Fire1"))
         {
-            weapon.gameObject.SetActive(true);
-            weapon0.gameObject.SetActive(false);
+           
 
             if (weapon.attackState == false)
             {
@@ -59,40 +58,46 @@ public class PlayerCombat : MonoBehaviour
 
             }
 
-               
-            if (Time.time - lastClickedTime >= 0.9f)
+            if(Time.time - lastComboEnd > timeBetweenCombos && comboCounter <= combo.Count)
             {
-                    
-                CancelInvoke("EndCombo");
-                animator.runtimeAnimatorController = combo[comboCounter].animatorOV;
-                playerInput.enabled = false;
-                animator.Play("Attack", 0, 0);
+                if (Time.time - lastClickedTime >= 0.9f)
+                {
 
 
-                lastClickedTime = Time.time;
-                weapon.damage = combo[comboCounter].damage;
                     //if (Time.time - lastClickedTime >= 0.2f)
 
-                for (int i = nowTimeItem + 1; i < timeings.Length; i++)
-                {
-                    if (timeings[i] - 0.5f <= pastTime && pastTime <= timeings[i] + 0.5f)
+                    for (int i = nowTimeItem + 1; i < timeings.Length; i++)
                     {
-
-
-                        comboCounter++;
-
-                        if (comboCounter + 1 > combo.Count)
+                        if (timeings[i] - 0.5f <= pastTime && pastTime <= timeings[i] + 0.5f)
                         {
-                            comboCounter = 0;
+                            weapon.gameObject.SetActive(true);
+                            weapon0.gameObject.SetActive(false);
+                            CancelInvoke("EndCombo");
+                            animator.runtimeAnimatorController = combo[comboCounter].animatorOV;
+                            playerInput.enabled = false;
+                            animator.Play("Attack", 0, 0);
+
+
+                     
+                            weapon.damage = combo[comboCounter].damage;
+
+                            comboCounter++;
+                            lastClickedTime = Time.time;
+
+                            if (comboCounter + 1 > combo.Count)
+                            {
+                                comboCounter = 0;
+                            }
+                            nowTimeItem = i;
+
+                            break;
                         }
-                        nowTimeItem = i;
-                            
-                        break;
+
                     }
-                        
+
                 }
-                    
             }
+           
 
 
 

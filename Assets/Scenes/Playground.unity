@@ -955,9 +955,10 @@ MonoBehaviour:
   combo:
   - {fileID: 11400000, guid: ebb7cee232d7be54aafd83f8493c4fbe, type: 2}
   - {fileID: 11400000, guid: b1b716f1b323fb648a8689c90b7814ff, type: 2}
-  - {fileID: 11400000, guid: ebb7cee232d7be54aafd83f8493c4fbe, type: 2}
   - {fileID: 11400000, guid: e269adba0316c68479eff7c112039e9d, type: 2}
-  - {fileID: 11400000, guid: b1b716f1b323fb648a8689c90b7814ff, type: 2}
+  - {fileID: 11400000, guid: 90b67e905b0836f488f04f9d8c1b2462, type: 2}
+  - {fileID: 11400000, guid: acc31dfbb1960134fb7554941846fd52, type: 2}
+  - {fileID: 11400000, guid: 974e3a2512d98e84599bb6a828a698fa, type: 2}
   timeBetweenCombos: 0.38
   weapon: {fileID: 780952325}
   timeBetweenDraw: 0.6

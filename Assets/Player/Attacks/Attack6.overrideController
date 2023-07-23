@@ -9,5 +9,5 @@ AnimatorOverrideController:
   m_Name: Attack6
   m_Controller: {fileID: 9100000, guid: a00ea2a37a5d9214bb9a033528ca14af, type: 2}
   m_Clips:
-  - m_OriginalClip: {fileID: -203655887218126122, guid: d283ddd4ef498274cb8633e90e7ed935, type: 3}
-    m_OverrideClip: {fileID: -203655887218126122, guid: d283ddd4ef498274cb8633e90e7ed935, type: 3}
+  - m_OriginalClip: {fileID: -203655887218126122, guid: 859c5dce3a82efb47a37965a4dd5e65f, type: 3}
+    m_OverrideClip: {fileID: -203655887218126122, guid: abfba1c9d9a34114681ed5a24d8fd109, type: 3}
