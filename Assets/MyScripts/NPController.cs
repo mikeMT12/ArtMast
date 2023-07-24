@@ -39,6 +39,11 @@ public class NPCController : MonoBehaviour
     private float StartHealth;
     private NavMeshAgent navMeshAgent;
     private int time;
+
+    private void Awake()
+    {
+        PlayerController.instance.StartNPC += StartWalk;
+    }
     private void Start()
     {
         navMeshAgent = GetComponent<NavMeshAgent>();
@@ -132,6 +137,7 @@ public class NPCController : MonoBehaviour
         HealthScrollbar.size =  NpcHealth / StartHealth;
         if(NpcHealth <= 0)
         {
+            PlayerController.instance.AttacsNpc--;
             StopAllCoroutines();
             if(NpcAnimator != null) {NpcAnimator.Play("death"); }
             
