@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour
     public float PlayerHealth;
     public Scrollbar HealthScrollbar;
     public GameObject DamageEffect;
+    
     [Space]
     [Header("Movement")]
     public float moveSpeed = 5f; // Скорость перемещения игрока
@@ -37,11 +38,11 @@ public class PlayerController : MonoBehaviour
     public Transform ShootingDirectionPoint;
     public float ShootingSpredRadius;
     public Animator PlayerAnimator;
-    public string[] NameOfComboAttack;
+    public AnimationClip[] DefaultAttack;
     public float AttackDistance;
 
+    private bool IsAttack = false;
     private float StartHealth;
-
     private void Awake()
     {
         if (instance == null) instance = this;
@@ -55,7 +56,11 @@ public class PlayerController : MonoBehaviour
     public void Hit(float damage)
     {
         PlayerHealth -= damage;
-        if (DamageEffect != null) { Instantiate(DamageEffect, transform); Destroy(DamageEffect, 1); }
+        if (DamageEffect != null)
+        {
+            var deffect = Instantiate(DamageEffect, this.transform);
+            deffect.transform.parent  = null; 
+            Destroy(deffect, 1); }
         HealthScrollbar.size = PlayerHealth / StartHealth;
         var cblock = HealthScrollbar.colors;
         if (HealthScrollbar.size < 0.5f)
@@ -74,12 +79,13 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        
+        if (Input.GetMouseButtonDown(0) && !IsAttack)
         {
             bool IsCombo = false;
             for (int i = nowTimeItem + 1; i < timeings.Length; i++)
             {
-                if (timeings[i] - 0.2f <= pastTime && pastTime <= timeings[i] + 0.2f)
+                if (timeings[i] - 0.3f <= pastTime && pastTime <= timeings[i] + 0.3f)
                 {
                     IsCombo = true;
                     nowTimeItem = i;
@@ -94,8 +100,9 @@ public class PlayerController : MonoBehaviour
         // Получаем входные значения осей горизонтального и вертикального ввода (WASD или стрелки)
         float horizontalInput = Input.GetAxis("Horizontal");
         float verticalInput = Input.GetAxis("Vertical");
-        if (horizontalInput != 0 || verticalInput != 0) Walk(horizontalInput, verticalInput);
-        else { PlayerAnimator.Play("idle"); PlayerAnimator.SetInteger("speed", 0); }
+        if ((horizontalInput != 0 || verticalInput != 0) && !IsAttack) Walk(horizontalInput, verticalInput);
+        else if (!IsAttack){ PlayerAnimator.Play("idle");
+               PlayerAnimator.SetInteger("speed", 0); }
     }
 
     void Walk(float horizontalInput, float verticalInput)
@@ -131,6 +138,7 @@ public class PlayerController : MonoBehaviour
 
     void Attack()
     {
+        StartCoroutine(IsAttacktimer(0));
         // Вычисляем направление стрельбы
         Vector3 shootingDirection = ShootingDirectionPoint.position - transform.position;
 
@@ -138,7 +146,7 @@ public class PlayerController : MonoBehaviour
         Vector3 bulletSpread = UnityEngine.Random.insideUnitCircle * ShootingSpredRadius;
         shootingDirection.x += bulletSpread.x;
         shootingDirection.y += bulletSpread.y;
-
+        if (PlayerAnimator != null) { PlayerAnimator.Play("attack"); }
         // Выпускаем луч в направлении игрока
         RaycastHit hit;
         if (Physics.Raycast(transform.position, shootingDirection, out hit))
@@ -151,20 +159,22 @@ public class PlayerController : MonoBehaviour
                 // Вызываем функцию попадания
                 hit.transform.GetComponent<NPCController>().OnHit(1);
             }
-            if (PlayerAnimator != null) { PlayerAnimator.Play("Attack"); }
+            
         }
     }
 
     void ComboAttack()
     {
+        int attackNum = UnityEngine.Random.Range(1, DefaultAttack.Length);
+        StartCoroutine(IsAttacktimer(attackNum));
         // Вычисляем направление стрельбы
-        Vector3 shootingDirection = transform.position - transform.position;
+        Vector3 shootingDirection = ShootingDirectionPoint.position - transform.position;
 
         // Применяем разброс пуль
         Vector3 bulletSpread = UnityEngine.Random.insideUnitCircle * ShootingSpredRadius;
         shootingDirection.x += bulletSpread.x;
         shootingDirection.y += bulletSpread.y;
-
+        if (PlayerAnimator != null) { PlayerAnimator.Play(DefaultAttack[attackNum].name); }
         // Выпускаем луч в направлении игрока
         RaycastHit hit;
         if (Physics.Raycast(transform.position, shootingDirection, out hit))
@@ -172,20 +182,28 @@ public class PlayerController : MonoBehaviour
             // Проверяем попадание в игрока
             if (hit.transform.GetComponent<NPCController>() != null)
             {
-                // Вызываем функцию попадания
-                hit.transform.GetComponent<NPCController>().OnHit(10);
+                float distanceToNPC = Vector3.Distance(transform.position, hit.transform.position);
+                if (distanceToNPC <= AttackDistance)
+                    // Вызываем функцию попадания
+                    hit.transform.GetComponent<NPCController>().OnHit(5);
             }
-            if (PlayerAnimator != null) { PlayerAnimator.Play(NameOfComboAttack[UnityEngine.Random.Range(0, NameOfComboAttack.Length)]); }
+            
         }
     }
 
-
+    IEnumerator IsAttacktimer(int attack)
+    {
+        IsAttack = true;
+        yield return new WaitForSeconds(DefaultAttack[attack].length);
+        IsAttack = false;
+    }
     IEnumerator Timer()
     {
         while (true)
         {
             if(pastTime == SoundLenth)
             {
+
                 pastTime = 0;
                 nowTimeItem = 0;
             }
