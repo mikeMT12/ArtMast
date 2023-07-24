@@ -9,9 +9,13 @@ public class NPCController : MonoBehaviour
     [Space]
     [Tooltip("Позиция игрока, перетащите игрока")]
     public Transform playerPosition; // Позиция игрока
+    public GameObject Hilkaprefab;
+    public GameObject StrenthPrefab;
+    public Transform NPCTransform;
     [Space(2)]
     [Header("Для NPC")]
     [Space]
+    public bool IsItBossWhoDropStrenth;
     [Tooltip("Точки по которым ходит npc")]
     public Transform[] PointPositions;
     [Tooltip("Дистанция, с которой NPC открывает огонь")]
@@ -34,11 +38,16 @@ public class NPCController : MonoBehaviour
     public float bulletSpreadRadius; // Разброс пуль
     [Tooltip("Точка спавна пули")]
     public Transform bulletSpawnPoint; // Точка спавна пуль
-
+    [Space(2)]
+    [Header("Sound")]
+    private AudioSource NpcAudioSource;
+    public AudioClip HitSound;
+    public AudioClip AttacktSound;
+    public AudioClip DeathSound;
 
     private float StartHealth;
     private NavMeshAgent navMeshAgent;
-    private int time;
+    public float time;
 
     private void Awake()
     {
@@ -48,7 +57,8 @@ public class NPCController : MonoBehaviour
     {
         navMeshAgent = GetComponent<NavMeshAgent>();
         navMeshAgent.stoppingDistance = shootingRange;
-         StartHealth = NpcHealth;
+        StartHealth = NpcHealth;
+        NpcAudioSource = GetComponent<AudioSource>();
     }
 
     public void StartWalk()
@@ -58,6 +68,7 @@ public class NPCController : MonoBehaviour
 
     void Shoot()
     {
+        if(AttacktSound != null) { NpcAudioSource.PlayOneShot(AttacktSound); }
         // Вычисляем направление стрельбы
         Vector3 shootingDirection = playerPosition.position - bulletSpawnPoint.position;
 
@@ -76,46 +87,44 @@ public class NPCController : MonoBehaviour
                 // Вызываем функцию попадания
                 hit.transform.GetComponent<PlayerController>().Hit(DamageStrong);
             }
-            if(NpcAnimator!=null) {  NpcAnimator.Play("attack");}
+            if (NpcAnimator != null) { NpcAnimator.Play("attack"); }
         }
     }
 
     IEnumerator Persecution()
     {
         while (!IsWalk)
-        {         
+        {
             float distanceToPlayer = Vector3.Distance(transform.position, playerPosition.position);
             if (distanceToPlayer <= shootingRange)
-                    {
-                        Shoot();   
-                    }
-            else 
-                {  
-                    navMeshAgent.SetDestination(playerPosition.position);
-                }
-
-            //если игрок сишком далеко то закончить преследование
-            if (distanceToPlayer >= PersecutionDistance * 4)
-            {
-                IsWalk = true;
-                PlayerController.instance.AttacsNpc--;
-                StartCoroutine(WalkAround());
+            { 
+                Shoot();    
             }
+            else
+                {
+                 navMeshAgent.SetDestination(playerPosition.position);
+                }
+            //если игрок сишком далеко то закончить преследование
+            if (distanceToPlayer >= PersecutionDistance * 2)
+                    {
+                        IsWalk = true;
+                        PlayerController.instance.AttacsNpc--;
+                        StartCoroutine(WalkAround());
+                    }
             yield return new WaitForSeconds(AttackTime);
+            }
         }
-         
-    }
-
+    
     IEnumerator WalkAround()
     {
         navMeshAgent.destination = PointPositions[NowPositionNumber].position;
         while (IsWalk)
         {
             //walk to points
-            if(navMeshAgent.remainingDistance <= DistanceToChangePoint)
+            if (navMeshAgent.remainingDistance <= DistanceToChangePoint)
             {
                 NowPositionNumber++;
-                if(NowPositionNumber == PointPositions.Length) NowPositionNumber = 0;
+                if (NowPositionNumber == PointPositions.Length) NowPositionNumber = 0;
                 navMeshAgent.SetDestination(PointPositions[NowPositionNumber].position);
             }
             //chek attack player
@@ -128,22 +137,28 @@ public class NPCController : MonoBehaviour
             }
 
             yield return new WaitForSeconds(0.1f);
-        }      
-    }
+        }
+    } 
 
     public void OnHit(float damage)
-    {
-        NpcHealth -= damage;
-        HealthScrollbar.size =  NpcHealth / StartHealth;
-        if(NpcHealth <= 0)
         {
-            PlayerController.instance.AttacsNpc--;
-            StopAllCoroutines();
-            if(NpcAnimator != null) {NpcAnimator.Play("death"); }
             
-            Destroy(gameObject, 1);
+            NpcHealth -= damage;
+            HealthScrollbar.size = NpcHealth / StartHealth;
+            if (NpcHealth <= 0)
+            {
+            if (AttacktSound != null) { NpcAudioSource.PlayOneShot(DeathSound); }
+            PlayerController.instance.AttacsNpc--;
+                StopAllCoroutines();
+                if (NpcAnimator != null) { NpcAnimator.Play("death"); }
+                if(Random.Range(0, 2) == 0)  Instantiate(Hilkaprefab, NPCTransform.position, Quaternion.EulerAngles(0,0,0)); 
+                if(IsItBossWhoDropStrenth) Instantiate(StrenthPrefab, NPCTransform.position, Quaternion.EulerAngles(0, 0, 0));
+                Destroy(gameObject, 1);
+            }
+            else if (AttacktSound != null) { NpcAudioSource.PlayOneShot(HitSound); }
+
         }
-        
-    }
+    
 }
+
 

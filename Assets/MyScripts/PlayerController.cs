@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour
     public float PlayerHealth;
     public Scrollbar HealthScrollbar;
     public GameObject DamageEffect;
-    
+    public Transform PlayerTransform;
     [Space]
     [Header("Movement")]
     public float moveSpeed = 5f; // Скорость перемещения игрока
@@ -29,7 +29,7 @@ public class PlayerController : MonoBehaviour
     private AudioSource audioSource;
     public float[] timeings;
     public float SoundLenth;
-    private int nowTimeItem = -1;
+    public int nowTimeItem = -1;
     public float pastTime;
     [Space(2)]
     [Header("NPC")]
@@ -40,7 +40,15 @@ public class PlayerController : MonoBehaviour
     public Animator PlayerAnimator;
     public AnimationClip[] DefaultAttack;
     public float AttackDistance;
+    public float AttackStrenghForBaf;
+    [Space(2)]
+    [Header("Bafs")]
+    public GameObject UiStrenthBaf;
+    private bool IsIHaveStrenth;
+    [Header("Rooms")]
+    public int[] CountNPCInRoom;
 
+    private CharacterController CharController;
     private bool IsAttack = false;
     private float StartHealth;
     private void Awake()
@@ -52,13 +60,14 @@ public class PlayerController : MonoBehaviour
     {
         audioSource = GetComponent<AudioSource>();
         StartHealth = PlayerHealth;
+        CharController = GetComponent<CharacterController>();
     }
     public void Hit(float damage)
     {
         PlayerHealth -= damage;
         if (DamageEffect != null)
         {
-            var deffect = Instantiate(DamageEffect, this.transform);
+            var deffect = Instantiate(DamageEffect, PlayerTransform.position, Quaternion.EulerAngles(0, 0, 0));
             deffect.transform.parent  = null; 
             Destroy(deffect, 1); }
         HealthScrollbar.size = PlayerHealth / StartHealth;
@@ -132,7 +141,8 @@ public class PlayerController : MonoBehaviour
             }
 
             // Перемещаем игрока в указанном направлении с учетом скорости
-            transform.Translate(moveDirection * currentSpeed * Time.deltaTime);
+            //transform.Translate(moveDirection * currentSpeed * Time.deltaTime);
+        CharController.Move(moveDirection * currentSpeed * Time.deltaTime);
             Camera.position = transform.position + CameraPoint;
     }
 
@@ -157,7 +167,7 @@ public class PlayerController : MonoBehaviour
                 float distanceToNPC = Vector3.Distance(transform.position, hit.transform.position);
                 if(distanceToNPC <= AttackDistance)
                 // Вызываем функцию попадания
-                hit.transform.GetComponent<NPCController>().OnHit(1);
+                hit.transform.GetComponent<NPCController>().OnHit(AttackStrenghForBaf);
             }
             
         }
@@ -211,7 +221,6 @@ public class PlayerController : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
     }
-
     public void StartNpc()
     {
         StartNPC?.Invoke();
@@ -219,4 +228,24 @@ public class PlayerController : MonoBehaviour
         StartCoroutine(Timer());
     }
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision.transform.GetComponent<Hilka>() != null)
+        {
+            PlayerHealth += collision.transform.GetComponent<Hilka>().HillCount;
+            Destroy(collision.transform.gameObject);
+        }
+        else if(collision.transform.GetComponent<Strenth>() != null)
+        {
+            UiStrenthBaf.SetActive(true);
+            IsIHaveStrenth = true;
+            Destroy(collision.transform.gameObject);
+        }
+        else if(collision.transform.GetComponent<AplayBafs>() != null && IsIHaveStrenth)
+        {
+            UiStrenthBaf.SetActive(false);
+            IsIHaveStrenth = false;
+            AttackStrenghForBaf += collision.transform.GetComponent<AplayBafs>().StrenthCount;
+        }
+    }
 }
