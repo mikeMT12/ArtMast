@@ -47,6 +47,10 @@ public class PlayerController : MonoBehaviour
     private bool IsIHaveStrenth;
     [Header("Rooms")]
     public int[] CountNPCInRoom;
+    [Space]
+    [Header("Weapon")]
+    public GameObject GuitarOnBack;
+    public GameObject GuitarInHand;
 
     private CharacterController CharController;
     private bool IsAttack = false;
@@ -58,6 +62,8 @@ public class PlayerController : MonoBehaviour
     }
     private void Start()
     {
+        GuitarOnBack.SetActive(true);
+        GuitarInHand.SetActive(false);
         audioSource = GetComponent<AudioSource>();
         StartHealth = PlayerHealth;
         CharController = GetComponent<CharacterController>();
@@ -116,8 +122,10 @@ public class PlayerController : MonoBehaviour
 
     void Walk(float horizontalInput, float verticalInput)
     {
-            // Проверяем, нажата ли кнопка Shift для бега
-            isSprinting = Input.GetKey(KeyCode.LeftShift);
+        GuitarOnBack.SetActive(true);
+        GuitarInHand.SetActive(false);
+        // Проверяем, нажата ли кнопка Shift для бега
+        isSprinting = Input.GetKey(KeyCode.LeftShift);
         if (isSprinting)
         {
             PlayerAnimator.Play("run");
@@ -148,6 +156,8 @@ public class PlayerController : MonoBehaviour
 
     void Attack()
     {
+        GuitarOnBack.SetActive(false);
+        GuitarInHand.SetActive(true);
         StartCoroutine(IsAttacktimer(0));
         // Вычисляем направление стрельбы
         Vector3 shootingDirection = ShootingDirectionPoint.position - transform.position;
@@ -175,6 +185,8 @@ public class PlayerController : MonoBehaviour
 
     void ComboAttack()
     {
+        GuitarOnBack.SetActive(false);
+        GuitarInHand.SetActive(true);
         int attackNum = UnityEngine.Random.Range(1, DefaultAttack.Length);
         StartCoroutine(IsAttacktimer(attackNum));
         // Вычисляем направление стрельбы
